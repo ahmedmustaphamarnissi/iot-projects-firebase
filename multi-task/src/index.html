@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ESP32 Control Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #eceff5;
+        --surface: #ffffff;
+        --ink: #0f1729;
+        --muted: #63708a;
+        --line: #dde2ec;
+        --accent: #3a4bff;
+        --coral: #ff7a59;
+        --sky: #2aa8ff;
+        --danger: #e5484d;
+        --ok: #22b573;
+        --font-display: "Bricolage Grotesque", "Figtree", system-ui, sans-serif;
+        --font-body:
+          "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, Arial,
+          sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--font-body);
+        background: var(--bg);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+        display: flex;
+        flex-direction: column;
+        min-height: 100dvh;
+      }
+
+      main {
+        flex: 1;
+        width: 100%;
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 28px 20px 24px;
+      }
+
+      :focus-visible {
+        outline: 3px solid var(--accent);
+        outline-offset: 3px;
+      }
+
+      svg.icon {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+      }
+
+      /* ---------- Buttons ---------- */
+      .btn {
+        font: inherit;
+        font-weight: 700;
+        font-size: 0.95rem;
+        border: 2px solid transparent;
+        border-radius: 12px;
+        padding: 12px 20px;
+        cursor: pointer;
+        transition:
+          transform 0.15s ease,
+          background-color 0.2s ease,
+          color 0.2s ease;
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn-primary {
+        width: 100%;
+        background: var(--ink);
+        color: #fff;
+        font-size: 1rem;
+        padding: 15px 20px;
+      }
+      .btn-primary:hover {
+        background: #1f2b47;
+      }
+      .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
+      .btn-outline {
+        background: var(--surface);
+        color: var(--ink);
+        border-color: var(--line);
+      }
+      .btn-outline:hover {
+        border-color: var(--ink);
+      }
+      .btn-stop {
+        background: var(--ink);
+        color: #fff;
+      }
+      .btn-stop:hover {
+        background: var(--danger);
+      }
+
+      /* ---------- Login ---------- */
+      #loginForm {
+        max-width: 420px;
+        margin: 9vh auto 0;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        padding: 36px 30px 30px;
+      }
+      .brand-chip {
+        width: 56px;
+        height: 56px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 22px;
+        color: #fff;
+        background: var(--accent);
+        border-radius: 18px 18px 18px 6px;
+      }
+      .brand-chip svg {
+        width: 28px;
+        height: 28px;
+      }
+      #loginForm h1 {
+        margin: 0 0 8px;
+        font-family: var(--font-display);
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+      }
+      #loginForm .lead {
+        margin: 0 0 28px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .field {
+        margin-bottom: 18px;
+      }
+      .field label {
+        display: block;
+        margin-bottom: 7px;
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+      .field input {
+        width: 100%;
+        padding: 14px 16px;
+        font: inherit;
+        font-size: 1rem;
+        color: var(--ink);
+        background: var(--bg);
+        border: 2px solid transparent;
+        border-radius: 12px;
+        transition:
+          border-color 0.2s ease,
+          background-color 0.2s ease;
+      }
+      .field input::placeholder {
+        color: #98a2b8;
+      }
+      .field input:focus {
+        outline: none;
+        border-color: var(--accent);
+        background: #fff;
+      }
+      #loginError {
+        min-height: 1.3em;
+        margin: -4px 0 14px;
+        font-size: 0.9rem;
+        color: var(--danger);
+        font-weight: 600;
+      }
+
+      /* ---------- Dashboard ---------- */
+      #dashboard {
+        display: none;
+      }
+
+      .topbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 30px;
+      }
+      .title-block {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .title-block .brand-chip {
+        width: 48px;
+        height: 48px;
+        margin: 0;
+        border-radius: 15px 15px 15px 5px;
+      }
+      .title-block .brand-chip svg {
+        width: 24px;
+        height: 24px;
+      }
+      .title-block h1 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: clamp(1.5rem, 4vw, 2rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+      }
+      .conn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-top: 4px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .conn .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--danger);
+      }
+      .conn.online .dot {
+        background: var(--ok);
+        box-shadow: 0 0 0 4px rgba(34, 181, 115, 0.2);
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      h2.section {
+        margin: 0 0 14px;
+        font-family: var(--font-display);
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .section-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 14px;
+      }
+      .section-head h2.section {
+        margin: 0;
+      }
+      .section-head .count {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .section-head .count strong {
+        color: var(--ink);
+      }
+
+      /* ---------- Sensors ---------- */
+      .sensors {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 34px;
+      }
+
+      .sensor {
+        --c: var(--coral);
+        --tint: #fff0ec;
+        padding: 24px;
+        background: var(--tint);
+        border-radius: 30px;
+      }
+      .sensor.humidity {
+        --c: var(--sky);
+        --tint: #e7f4ff;
+      }
+      .sensor-top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+      }
+      .sensor-top .chip {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        color: #fff;
+        background: var(--c);
+      }
+      .reading {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+        margin: 26px 0 20px;
+        font-family: var(--font-display);
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 1;
+      }
+      .reading .value {
+        font-size: clamp(3.2rem, 9vw, 4.6rem);
+      }
+      .reading .unit {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--muted);
+        letter-spacing: -0.02em;
+      }
+      .bar {
+        height: 10px;
+        background: rgba(15, 23, 41, 0.1);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .bar > i {
+        display: block;
+        height: 100%;
+        width: 0%;
+        background: var(--c);
+        border-radius: 999px;
+        transition: width 0.6s ease;
+      }
+
+      /* ---------- Controls ---------- */
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+
+      .ctl {
+        --c: #4ade80;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 190px;
+        padding: 20px;
+        background: var(--surface);
+        border: 2px solid var(--line);
+        border-radius: 22px;
+        transition:
+          background-color 0.3s ease,
+          border-color 0.3s ease;
+      }
+      .ctl.on {
+        background: var(--c);
+        border-color: var(--c);
+      }
+
+      .ctl-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+      }
+      .ctl .chip {
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        color: var(--ink);
+        background: color-mix(in srgb, var(--c) 28%, #fff);
+        transition: background-color 0.3s ease;
+      }
+      .ctl.on .chip {
+        background: rgba(15, 23, 41, 0.14);
+      }
+
+      .ctl-bottom {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .ctl .state {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1;
+      }
+
+      .switch {
+        position: relative;
+        flex-shrink: 0;
+        width: 58px;
+        height: 34px;
+        padding: 0;
+        border: none;
+        border-radius: 999px;
+        background: #ccd3e0;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      .switch::after {
+        content: "";
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #fff;
+        transition: transform 0.3s cubic-bezier(0.3, 1.4, 0.5, 1);
+      }
+      .switch[aria-checked="true"] {
+        background: var(--ink);
+      }
+      .switch[aria-checked="true"]::after {
+        transform: translateX(24px);
+      }
+      .switch:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      /* Buzzer rings while it is on */
+      @keyframes ring {
+        0%,
+        100% {
+          transform: rotate(0);
+        }
+        15% {
+          transform: rotate(14deg);
+        }
+        30% {
+          transform: rotate(-12deg);
+        }
+        45% {
+          transform: rotate(8deg);
+        }
+        60% {
+          transform: rotate(-6deg);
+        }
+        75% {
+          transform: rotate(0);
+        }
+      }
+      .ctl.on.buzzer .chip svg {
+        transform-origin: 50% 10%;
+        animation: ring 1.4s ease-in-out infinite;
+      }
+
+      footer {
+        padding: 22px;
+        text-align: center;
+        font-size: 0.88rem;
+        color: var(--muted);
+      }
+
+      @media (max-width: 860px) {
+        .controls {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 560px) {
+        main {
+          padding-top: 20px;
+        }
+        #loginForm {
+          margin-top: 5vh;
+          padding: 28px 22px 24px;
+        }
+        .actions {
+          width: 100%;
+        }
+        .actions .btn {
+          flex: 1;
+        }
+        .sensors {
+          grid-template-columns: 1fr;
+          margin-bottom: 28px;
+        }
+        .sensor {
+          padding: 20px;
+        }
+        .controls {
+          gap: 10px;
+        }
+        .ctl {
+          min-height: 160px;
+          padding: 16px;
+        }
+        .ctl .state {
+          font-size: 1.6rem;
+        }
+      }
+      @media (max-width: 340px) {
+        .controls {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+          animation: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <!-- Login form -->
+      <section id="loginForm" aria-labelledby="loginTitle">
+        <div class="brand-chip" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 24 24">
+            <rect x="6" y="6" width="12" height="12" rx="2" />
+            <path
+              d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"
+            />
+          </svg>
+        </div>
+        <h1 id="loginTitle">ESP32 Control Hub</h1>
+        <p class="lead">
+          Sign in to control your LEDs and buzzer, and read the temperature and
+          humidity.
+        </p>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            placeholder="you@example.com"
+            autocomplete="username"
+            required
+          />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="Your password"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+        <div id="loginError" role="alert"></div>
+        <button class="btn btn-primary" id="loginBtn">Sign in</button>
+      </section>
+
+      <!-- Dashboard -->
+      <section id="dashboard">
+        <header class="topbar">
+          <div class="title-block">
+            <div class="brand-chip" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24">
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+                <path
+                  d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"
+                />
+              </svg>
+            </div>
+            <div>
+              <h1>ESP32 Control Hub</h1>
+              <span class="conn" id="connPill"
+                ><span class="dot"></span
+                ><span id="connText">Connecting…</span></span
+              >
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-stop" id="allOffBtn">Turn all off</button>
+            <button class="btn btn-outline" id="logoutBtn">Log out</button>
+          </div>
+        </header>
+
+        <!-- Read-only sensors -->
+        <h2 class="section">Sensors</h2>
+        <div class="sensors">
+          <article class="sensor temperature">
+            <div class="sensor-top">
+              <span class="chip" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24">
+                  <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z" />
+                </svg>
+              </span>
+              Temperature
+            </div>
+            <div class="reading">
+              <span class="value" id="tempValue">--</span
+              ><span class="unit">°C</span>
+            </div>
+            <div class="bar" role="presentation"><i id="tempBar"></i></div>
+          </article>
+
+          <article class="sensor humidity">
+            <div class="sensor-top">
+              <span class="chip" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24">
+                  <path
+                    d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"
+                  />
+                </svg>
+              </span>
+              Humidity
+            </div>
+            <div class="reading">
+              <span class="value" id="humValue">--</span
+              ><span class="unit">%</span>
+            </div>
+            <div class="bar" role="presentation"><i id="humBar"></i></div>
+          </article>
+        </div>
+
+        <!-- Controls -->
+        <div class="section-head">
+          <h2 class="section">Controls</h2>
+          <span class="count"><strong id="onCount">0</strong> of 4 on</span>
+        </div>
+        <div class="controls">
+          <article class="ctl" id="card1" style="--c: #4ade80">
+            <div class="ctl-top">
+              <span class="chip" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24">
+                  <path
+                    d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1v.5h5V16c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"
+                  />
+                </svg>
+              </span>
+              Green LED
+            </div>
+            <div class="ctl-bottom">
+              <span class="state" id="status1">…</span>
+              <button
+                class="switch"
+                id="btn1"
+                role="switch"
+                aria-checked="false"
+                aria-label="Toggle green LED"
+                disabled
+              ></button>
+            </div>
+          </article>
+
+          <article class="ctl" id="card2" style="--c: #fcd34d">
+            <div class="ctl-top">
+              <span class="chip" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24">
+                  <path
+                    d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1v.5h5V16c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"
+                  />
+                </svg>
+              </span>
+              Yellow LED
+            </div>
+            <div class="ctl-bottom">
+              <span class="state" id="status2">…</span>
+              <button
+                class="switch"
+                id="btn2"
+                role="switch"
+                aria-checked="false"
+                aria-label="Toggle yellow LED"
+                disabled
+              ></button>
+            </div>
+          </article>
+
+          <article class="ctl" id="card3" style="--c: #ff7b7b">
+            <div class="ctl-top">
+              <span class="chip" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24">
+                  <path
+                    d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1v.5h5V16c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"
+                  />
+                </svg>
+              </span>
+              Red LED
+            </div>
+            <div class="ctl-bottom">
+              <span class="state" id="status3">…</span>
+              <button
+                class="switch"
+                id="btn3"
+                role="switch"
+                aria-checked="false"
+                aria-label="Toggle red LED"
+                disabled
+              ></button>
+            </div>
+          </article>
+
+          <article class="ctl buzzer" id="card4" style="--c: #b79cff">
+            <div class="ctl-top">
+              <span class="chip" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24">
+                  <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+                </svg>
+              </span>
+              Buzzer
+            </div>
+            <div class="ctl-bottom">
+              <span class="state" id="status4">…</span>
+              <button
+                class="switch"
+                id="btn4"
+                role="switch"
+                aria-checked="false"
+                aria-label="Toggle buzzer"
+                disabled
+              ></button>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer>Created by Tech StudyCell</footer>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+
+    <script>
+      // Firebase config: replace the YOUR_... values with the ones from
+      // Firebase console > Project settings > Your apps > Web app
+      const firebaseConfig = {
+        apiKey: "AIzaSyDGVqfrSB4m79l5yCDR3o9eUbGLyrPbrU8",
+        authDomain: "esp32-leds-910a6.firebaseapp.com",
+        databaseURL: "https://esp32-leds-910a6-default-rtdb.firebaseio.com",
+        projectId: "esp32-leds-910a6",
+        storageBucket: "esp32-leds-910a6.firebasestorage.app",
+        messagingSenderId: "860267209738",
+        appId: "1:860267209738:web:4aa11fb782f97b455eebf3",
+      };
+
+      firebase.initializeApp(firebaseConfig);
+
+      // Database paths: change these if your ESP32 uses different names
+      const SENSOR_PATHS = { temperature: "temperature", humidity: "humidity" };
+
+      // Gauge ranges used for the progress bars
+      const TEMP_RANGE = { min: 0, max: 50 };
+      const HUM_RANGE = { min: 0, max: 100 };
+
+      const loginForm = document.getElementById("loginForm");
+      const dashboard = document.getElementById("dashboard");
+      const loginBtn = document.getElementById("loginBtn");
+      const loginError = document.getElementById("loginError");
+      const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+
+      let listeners = []; // detached on logout
+
+      function showError(msg) {
+        loginError.textContent = msg;
+      }
+
+      function doLogin() {
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        showError("");
+
+        if (!email || !password) {
+          showError("Enter your email and password.");
+          return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = "Signing in…";
+
+        // Firebase Auth checks the credentials (same user your ESP32 signs in with)
+        firebase
+          .auth()
+          .signInWithEmailAndPassword(email, password)
+          .then((userCredential) => {
+            console.log("Signed in as", userCredential.user.email);
+            loginForm.style.display = "none";
+            dashboard.style.display = "block";
+            startControl();
+          })
+          .catch(() => {
+            showError("Email or password is incorrect.");
+          })
+          .finally(() => {
+            loginBtn.disabled = false;
+            loginBtn.textContent = "Sign in";
+          });
+      }
+
+      loginBtn.addEventListener("click", doLogin);
+      [emailInput, passwordInput].forEach((el) =>
+        el.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") doLogin();
+        }),
+      );
+
+      function startControl() {
+        const db = firebase.database();
+        const onCount = document.getElementById("onCount");
+        const connPill = document.getElementById("connPill");
+        const connText = document.getElementById("connText");
+
+        // Controls: /led1 (green), /led2 (yellow), /led3 (red), /buzzer
+        const controls = [
+          { id: 1, path: "led1" },
+          { id: 2, path: "led2" },
+          { id: 3, path: "led3" },
+          { id: 4, path: "buzzer" },
+        ];
+
+        const states = {};
+
+        function updateCount() {
+          onCount.textContent = Object.values(states).filter(Boolean).length;
+        }
+
+        function listen(ref, fn) {
+          const handler = ref.on("value", fn);
+          listeners.push({ ref, handler });
+        }
+
+        // Connection indicator
+        listen(db.ref(".info/connected"), (snap) => {
+          const online = snap.val() === true;
+          connPill.classList.toggle("online", online);
+          connText.textContent = online ? "Connected" : "Offline";
+        });
+
+        // Read-only sensors
+        function showSensor(path, valueEl, barEl, range) {
+          listen(db.ref("/" + path), (snap) => {
+            const num = parseFloat(snap.val());
+            if (isNaN(num)) {
+              valueEl.textContent = "--";
+              barEl.style.width = "0%";
+              return;
+            }
+            valueEl.textContent = num.toFixed(1);
+            const pct = ((num - range.min) / (range.max - range.min)) * 100;
+            barEl.style.width = Math.max(0, Math.min(100, pct)) + "%";
+          });
+        }
+        showSensor(
+          SENSOR_PATHS.temperature,
+          document.getElementById("tempValue"),
+          document.getElementById("tempBar"),
+          TEMP_RANGE,
+        );
+        showSensor(
+          SENSOR_PATHS.humidity,
+          document.getElementById("humValue"),
+          document.getElementById("humBar"),
+          HUM_RANGE,
+        );
+
+        // LEDs and buzzer
+        controls.forEach((ctl) => {
+          const card = document.getElementById(`card${ctl.id}`);
+          const statusText = document.getElementById(`status${ctl.id}`);
+          const toggleButton = document.getElementById(`btn${ctl.id}`);
+          const ref = db.ref("/" + ctl.path);
+
+          listen(ref, (snapshot) => {
+            const state = !!snapshot.val();
+            states[ctl.id] = state;
+            statusText.innerText = state ? "On" : "Off";
+            card.classList.toggle("on", state);
+            toggleButton.setAttribute("aria-checked", String(state));
+            toggleButton.disabled = false;
+            updateCount();
+          });
+
+          toggleButton.onclick = () => {
+            ref.get().then((snap) => {
+              ref.set(!snap.val());
+            });
+          };
+        });
+
+        document.getElementById("allOffBtn").onclick = () => {
+          controls.forEach((ctl) => {
+            db.ref("/" + ctl.path).set(false);
+          });
+        };
+      }
+
+      document.getElementById("logoutBtn").onclick = () => {
+        firebase
+          .auth()
+          .signOut()
+          .then(() => {
+            listeners.forEach((l) => l.ref.off("value", l.handler));
+            listeners = [];
+            dashboard.style.display = "none";
+            loginForm.style.display = "block";
+            emailInput.value = "";
+            passwordInput.value = "";
+            showError("");
+          })
+          .catch((error) => {
+            alert("Logout failed: " + error.message);
+          });
+      };
+    </script>
+  </body>
+</html>
