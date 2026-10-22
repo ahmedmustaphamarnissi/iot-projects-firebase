@@ -14,6 +14,7 @@ This repository demonstrates practical IoT development through focused, working 
 |---------|-------------|-------------|
 | [leds-control](leds-control/) | Control three LEDs via physical switches and a web dashboard, with bidirectional Firebase sync | ESP32 · Firebase RTDB · Firebase Auth · HTML/JS |
 | [multi-task](multi-task/) | Remote LED and buzzer control combined with live DHT11 temperature and humidity monitoring | ESP32 · DHT11 · Firebase RTDB · Firebase Auth · HTML/JS |
+| [radar](radar/) | Servo-driven ultrasonic radar with auto-sweep and manual angle control, live detection and distance streamed to an animated web dashboard | ESP32 · HC-SR04 · Servo · Firebase RTDB · Firebase Auth · HTML/JS |
 
 ---
 
@@ -43,6 +44,19 @@ iot-projects/
 │   │   │   └── code.ino
 │   │   └── index.html
 │   └── README.md
+├── radar/
+│   ├── images/
+│   │   ├── auto-detect-mode.png
+│   │   ├── dtect-item.png
+│   │   ├── firebase-db.png
+│   │   ├── login-page.png
+│   │   ├── manual-detect-mode.png
+│   │   └── wiring.png
+│   ├── src/
+│   │   ├── code/
+│   │   │   └── code.ino
+│   │   └── index.html
+│   └── README.md
 └── README.md
 ```
 
@@ -55,11 +69,12 @@ iot-projects/
 | Microcontroller | ESP32 |
 | Firmware language | C/C++ (Arduino framework) |
 | IDE | Arduino IDE |
-| Sensor | DHT11 (temperature & humidity) |
+| Sensors | DHT11 (temperature & humidity) · HC-SR04 (ultrasonic distance) |
+| Actuators | Servo motor |
 | Cloud database | Firebase Realtime Database |
 | Authentication | Firebase Authentication |
 | Firebase library (ESP32) | Firebase ESP Client |
-| Sensor library | DHT sensor library (Adafruit) |
+| Sensor/servo libraries | DHT sensor library (Adafruit) · ESP32Servo |
 | Web dashboard | Vanilla HTML / CSS / JavaScript |
 | Firebase SDK (web) | Firebase JS SDK v9.6.10 |
 
@@ -91,6 +106,7 @@ Each project is independent. Navigate into the project folder you want to run an
 
 - [leds-control/README.md](leds-control/README.md)
 - [multi-task/README.md](multi-task/README.md)
+- [radar/README.md](radar/README.md)
 
 Each README covers:
 - Required Arduino libraries
